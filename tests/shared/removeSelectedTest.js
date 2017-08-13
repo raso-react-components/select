@@ -98,7 +98,7 @@ export default function removeSelectedTest(mode) {
       const dropdownWrapper = mount(wrapper.find('Trigger').node.getComponent());
       dropdownWrapper.find('MenuItem').simulate('click');
 
-      expect(wrapper.state().inputValue).toBe('');
+      expect(wrapper.state().inputValue.value).toBe('');
       expect(wrapper.state().value).toEqual([]);
     });
   });

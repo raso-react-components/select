@@ -50,11 +50,19 @@ exports[`Select.tags allowClear renders correctly 1`] = `
 
 exports[`Select.tags render render animation 1`] = `
 <SelectTrigger
+  backfill={false}
   defaultActiveFirstOption={true}
   dropdownMatchSelectWidth={true}
   dropdownMenuStyle={Object {}}
   dropdownStyle={Object {}}
-  inputValue=""
+  inputValue={
+    Object {
+      "backfill": false,
+      "isEmpty": [Function],
+      "isEqual": [Function],
+      "value": "",
+    }
+  }
   multiple={true}
   onDropdownVisibleChange={[Function]}
   onMenuDeselect={[Function]}

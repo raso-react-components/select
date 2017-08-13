@@ -28,7 +28,7 @@ describe('Select.combobox', () => {
       </Select>
     );
 
-    expect(wrapper.state().inputValue).toBe('1');
+    expect(wrapper.state().inputValue.value).toBe('1');
   });
 
   it('fire change event immediately when user inputing', () => {
@@ -57,7 +57,7 @@ describe('Select.combobox', () => {
     const dropdownWrapper = mount(wrapper.find('Trigger').node.getComponent());
 
     dropdownWrapper.find('MenuItem').first().simulate('click');
-    expect(wrapper.state().inputValue).toBe('1');
+    expect(wrapper.state().inputValue.value).toBe('1');
   });
 
   describe('input value', () => {

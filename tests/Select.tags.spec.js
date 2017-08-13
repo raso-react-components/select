@@ -52,7 +52,7 @@ describe('Select.tags', () => {
       { key: '3', label: '3' },
       { key: '4', label: '4' },
     ]);
-    expect(wrapper.state().inputValue).toBe('');
+    expect(wrapper.state().inputValue.value).toBe('');
     expect(wrapper.state().open).toBe(false);
     expect(input.node.focus).toBeCalled();
   });

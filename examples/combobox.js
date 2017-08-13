@@ -51,6 +51,7 @@ class Demo extends React.Component {
           placeholder="please select"
           value={this.state.value}
           combobox
+          backfill
         >
           <Option value="jack">
             <b style={{ color: 'red' }}>jack</b>

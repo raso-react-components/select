@@ -217,7 +217,7 @@ describe('Select', () => {
     wrapper.find('input').simulate('change', { target: { value: 'foo' } });
     wrapper.find('.rc-select-selection__clear').simulate('click');
     expect(handleChange).toBeCalledWith(undefined);
-    expect(wrapper.state().inputValue).toBe('');
+    expect(wrapper.state().inputValue.value).toBe('');
   });
 
   it('adds label to value', () => {
@@ -456,7 +456,7 @@ describe('Select', () => {
       .simulate('change', { target: { value: 'foo' } })
       .simulate('keyDown', { keyCode: KeyCode.ESC });
 
-    expect(wrapper.state().inputValue).toBe('');
+    expect(wrapper.state().inputValue.value).toBe('');
     // 下面不知道为什么会失败
     // expect(wrapper.state().open).toBe(false);
   });
@@ -514,7 +514,7 @@ describe('Select', () => {
     wrapper.find('.rc-select').find('textarea').simulate('keyDown', { keyCode: KeyCode.NUM_ONE });
 
     wrapper.find('MenuItem').first().simulate('click');
-    expect(wrapper.state().inputValue).toBe('1');
+    expect(wrapper.state().inputValue.value).toBe('1');
     expect(handleKeyDown).toBeCalled();
   });
 
@@ -629,5 +629,34 @@ describe('Select', () => {
     );
 
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it('backfill', () => {
+    const handleChange = jest.fn();
+    const handleSelect = jest.fn();
+    const wrapper = mount(
+      <Select
+        backfill
+        open
+        onChange={handleChange}
+        onSelect={handleSelect}
+      >
+        <Option value="1">1</Option>
+        <Option value="2">2</Option>
+      </Select>
+    );
+
+    const input = wrapper.find('input');
+
+    input.simulate('keyDown', { keyCode: KeyCode.DOWN });
+
+    expect(wrapper.state().inputValue.value).toBe('2');
+    expect(handleChange).not.toBeCalled();
+    expect(handleSelect).not.toBeCalled();
+
+    input.simulate('keyDown', { keyCode: KeyCode.ENTER });
+
+    expect(handleChange).toBeCalledWith('2');
+    expect(handleSelect).toBeCalledWith('2', expect.anything());
   });
 });

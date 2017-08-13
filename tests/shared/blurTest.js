@@ -19,6 +19,6 @@ export default function blurTest(mode) {
     jest.runAllTimers();
 
     expect(wrapper.find('input').node.value).toBe('');
-    expect(wrapper.state().inputValue).toBe('');
+    expect(wrapper.state().inputValue.value).toBe('');
   });
 }

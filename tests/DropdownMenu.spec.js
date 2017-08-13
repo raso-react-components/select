@@ -2,6 +2,7 @@
 import React from 'react';
 import { mount, render } from 'enzyme';
 import DropdownMenu from '../src/DropdownMenu';
+import createInputValue from '../src/InputValue';
 import { Item as MenuItem, ItemGroup as MenuItemGroup } from 'rc-menu';
 
 describe('DropdownMenu', () => {
@@ -57,7 +58,7 @@ describe('DropdownMenu', () => {
     wrapper.setProps({ visible: true });
     expect(wrapper.find('Menu').props().activeKey).toBe('1');
 
-    wrapper.setProps({ inputValue: 'foo' });
+    wrapper.setProps({ inputValue: createInputValue('foo') });
     expect(wrapper.find('Menu').props().activeKey).toBe('');
   });
 
@@ -93,7 +94,7 @@ describe('DropdownMenu', () => {
     wrapper.setProps({ visible: true });
     expect(wrapper.find('Menu').props().activeKey).toBe('2');
 
-    wrapper.setProps({ inputValue: 'foo' });
+    wrapper.setProps({ inputValue: createInputValue('foo') });
     expect(wrapper.find('Menu').props().activeKey).toBe('');
   });
 
@@ -119,10 +120,10 @@ describe('DropdownMenu', () => {
       <DropdownMenu />
     );
 
-    wrapper.setProps({ visible: true, inputValue: 'foo' });
+    wrapper.setProps({ visible: true, inputValue: createInputValue('foo') });
 
     expect(wrapper.instance().lastVisible).toBe(true);
-    expect(wrapper.instance().lastInputValue).toBe('foo');
+    expect(wrapper.instance().lastInputValue.value).toBe('foo');
   });
 
   it('not update when next visible is false', () => {

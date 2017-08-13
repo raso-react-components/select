@@ -26,6 +26,7 @@ import SelectTrigger from './SelectTrigger';
 import { SelectPropTypes } from './PropTypes';
 import { Item as MenuItem, ItemGroup as MenuItemGroup } from 'rc-menu';
 import warning from 'warning';
+import createInputValue from './InputValue';
 
 function noop() {}
 
@@ -68,6 +69,7 @@ export default class Select extends React.Component {
     optionFilterProp: 'value',
     optionLabelProp: 'value',
     notFoundContent: 'Not Found',
+    backfill: false,
   };
 
   constructor(props) {
@@ -80,11 +82,13 @@ export default class Select extends React.Component {
     }
     value = this.addLabelToValue(props, value);
     value = this.addTitleToValue(props, value);
-    let inputValue = '';
+    let inputValue = createInputValue('');
     if (props.combobox) {
-      inputValue = value.length
-        ? this.getLabelFromProps(props, value[0].key)
-        : '';
+      inputValue = createInputValue(
+        value.length ?
+        this.getLabelFromProps(props, value[0].key) :
+        ''
+      );
     }
     this.saveInputRef = saveRef.bind(this, 'inputInstance');
     this.saveInputMirrorRef = saveRef.bind(this, 'inputMirrorInstance');
@@ -109,11 +113,11 @@ export default class Select extends React.Component {
         value,
       });
       if (nextProps.combobox) {
-        this.setState({
-          inputValue: value.length
-            ? this.getLabelFromProps(nextProps, value[0].key)
-            : '',
-        });
+        this.setInputValue(createInputValue(
+          value.length ?
+          this.getLabelFromProps(nextProps, value[0].key) :
+          ''
+        ), false);
       }
     }
   };
@@ -159,10 +163,10 @@ export default class Select extends React.Component {
       const nextValue = this.tokenize(val);
       this.fireChange(nextValue);
       this.setOpenState(false, true);
-      this.setInputValue('', false);
+      this.setInputValue(createInputValue(''), false);
       return;
     }
-    this.setInputValue(val);
+    this.setInputValue(createInputValue(val));
     this.setState({
       open: true,
     });
@@ -237,7 +241,12 @@ export default class Select extends React.Component {
 
     if (state.open) {
       const menu = this.refs.trigger.getInnerMenu();
-      if (menu && menu.onKeyDown(event)) {
+      const backfill = (activeKey) => {
+        if (this.props.backfill) {
+          this.setInputValue(createInputValue(activeKey, { backfill: true }), false);
+        }
+      };
+      if (menu && menu.onKeyDown(event, backfill)) {
         event.preventDefault();
         event.stopPropagation();
       }
@@ -291,20 +300,18 @@ export default class Select extends React.Component {
       this.setOpenState(false, true);
     }
     this.fireChange(value);
-    let inputValue;
-    if (isCombobox(props)) {
-      inputValue = getPropValue(item, props.optionLabelProp);
-    } else {
-      inputValue = '';
-    }
-    this.setInputValue(inputValue, false);
+    this.setInputValue(createInputValue(
+      isCombobox(props) ?
+      getPropValue(item, props.optionLabelProp) :
+      ''
+    ), false);
   };
 
   onMenuDeselect = ({ item, domEvent }) => {
     if (domEvent.type === 'click') {
       this.removeSelected(getValuePropValue(item));
     }
-    this.setInputValue('', false);
+    this.setInputValue(createInputValue(''), false);
   };
 
   onArrowClick = e => {
@@ -351,7 +358,7 @@ export default class Select extends React.Component {
       if (
         isSingleMode(props) &&
         props.showSearch &&
-        inputValue &&
+        !inputValue.isEmpty() &&
         props.defaultActiveFirstOption
       ) {
         const options = this._options || [];
@@ -367,9 +374,10 @@ export default class Select extends React.Component {
             this.fireChange(value);
           }
         }
-      } else if (isMultipleOrTags(props) && inputValue) {
+      } else if (isMultipleOrTags(props) && !inputValue.isEmpty()) {
         // why not use setState?
-        this.state.inputValue = this.getInputDOMNode().value = '';
+        this.state.inputValue = createInputValue('');
+        this.getInputDOMNode().value = '';
       }
       props.onBlur(this.getVLForOnChange(value));
       this.setOpenState(false);
@@ -384,13 +392,13 @@ export default class Select extends React.Component {
     }
     const { inputValue, value } = state;
     event.stopPropagation();
-    if (inputValue || value.length) {
+    if (!inputValue.isEmpty() || value.length) {
       if (value.length) {
         this.fireChange([]);
       }
       this.setOpenState(false, true);
-      if (inputValue) {
-        this.setInputValue('');
+      if (!inputValue.isEmpty()) {
+        this.setInputValue(createInputValue(''));
       }
     }
   };
@@ -475,13 +483,13 @@ export default class Select extends React.Component {
   getPlaceholderElement = () => {
     const { props, state } = this;
     let hidden = false;
-    if (state.inputValue) {
+    if (!state.inputValue.isEmpty()) {
       hidden = true;
     }
     if (state.value.length) {
       hidden = true;
     }
-    if (isCombobox(props) && state.value.length === 1 && !state.value[0].key) {
+    if (isCombobox(props) && state.value.length === 1 && !state.value[0].key && !props.backfill) {
       hidden = false;
     }
     const placeholder = props.placeholder;
@@ -523,7 +531,7 @@ export default class Select extends React.Component {
             this.onInputKeyDown,
             inputElement.props.onKeyDown
           ),
-          value: this.state.inputValue,
+          value: this.state.inputValue.value,
           disabled: props.disabled,
           className: inputCls,
         })}
@@ -531,7 +539,7 @@ export default class Select extends React.Component {
           ref={this.saveInputMirrorRef}
           className={`${props.prefixCls}-search__field__mirror`}
         >
-          {this.state.inputValue}&nbsp;
+          {this.state.inputValue.value}&nbsp;
         </span>
       </div>
     );
@@ -566,7 +574,7 @@ export default class Select extends React.Component {
     };
     // clear search input value when open is false in singleMode.
     if (!open && isSingleMode(props) && props.showSearch) {
-      this.setInputValue('');
+      this.setInputValue(createInputValue(''));
     }
     if (!open) {
       this.maybeFocus(open, needFocus);
@@ -579,18 +587,18 @@ export default class Select extends React.Component {
   };
 
   setInputValue = (inputValue, fireSearch = true) => {
-    if (inputValue !== this.state.inputValue) {
+    if (!inputValue.isEqual(this.state.inputValue)) {
       this.setState({
         inputValue,
       });
       if (fireSearch) {
-        this.props.onSearch(inputValue);
+        this.props.onSearch(inputValue.value);
       }
     }
   };
 
-  filterOption = (input, child, defaultFilter = defaultFilterFn) => {
-    if (!input) {
+  filterOption = (inputValue, child, defaultFilter = defaultFilterFn) => {
+    if (inputValue.isEmpty() || inputValue.backfill) {
       return true;
     }
     let filterFn = this.props.filterOption;
@@ -607,7 +615,7 @@ export default class Select extends React.Component {
     } else if (child.props.disabled) {
       return false;
     } else if (typeof filterFn === 'function') {
-      return filterFn.call(this, input, child);
+      return filterFn.call(this, inputValue.value, child);
     }
     return true;
   };
@@ -869,8 +877,8 @@ export default class Select extends React.Component {
       value = value.filter(singleValue => {
         return (
           childrenKeys.indexOf(singleValue.key) === -1 &&
-          (!inputValue ||
-            String(singleValue.key).indexOf(String(inputValue)) > -1)
+          (inputValue.isEmpty() ||
+            String(singleValue.key).indexOf(String(inputValue.value)) > -1)
         );
       });
       sel = sel.concat(
@@ -888,13 +896,13 @@ export default class Select extends React.Component {
           );
         })
       );
-      if (inputValue) {
+      if (!inputValue.isEmpty()) {
         const notFindInputItem = sel.every(option => {
           return !this.filterOption.call(
             this,
             inputValue,
             option,
-            () => getValuePropValue(option) === inputValue
+            () => getValuePropValue(option) === inputValue.value
           );
         });
         if (notFindInputItem) {
@@ -902,10 +910,10 @@ export default class Select extends React.Component {
             <MenuItem
               style={UNSELECTABLE_STYLE}
               attribute={UNSELECTABLE_ATTRIBUTE}
-              value={inputValue}
-              key={inputValue}
+              value={inputValue.value}
+              key={inputValue.value}
             >
-              {inputValue}
+              {inputValue.value}
             </MenuItem>
           );
         }
@@ -948,7 +956,7 @@ export default class Select extends React.Component {
           showSelectedValue = true;
         } else {
           if (open) {
-            showSelectedValue = !inputValue;
+            showSelectedValue = inputValue.isEmpty();
             if (showSelectedValue) {
               opacity = 0.4;
             }
@@ -1064,7 +1072,7 @@ export default class Select extends React.Component {
     const props = this.props;
     const multiple = isMultipleOrTags(props);
     const state = this.state;
-    const { className, disabled, allowClear, prefixCls } = props;
+    const { className, disabled, allowClear, prefixCls, backfill } = props;
     const ctrlNode = this.renderTopControlNode();
     let extraSelectionProps = {};
     const { open } = this.state;
@@ -1089,7 +1097,7 @@ export default class Select extends React.Component {
       ...UNSELECTABLE_STYLE,
       display: 'none',
     };
-    if (state.inputValue || state.value.length) {
+    if (!state.inputValue.isEmpty() || state.value.length) {
       clearStyle.display = 'block';
     }
     const clear = (
@@ -1128,6 +1136,7 @@ export default class Select extends React.Component {
         onMenuSelect={this.onMenuSelect}
         onMenuDeselect={this.onMenuDeselect}
         ref="trigger"
+        backfill={backfill}
       >
         <div
           style={props.style}

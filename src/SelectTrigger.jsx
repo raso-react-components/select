@@ -37,12 +37,13 @@ export default class SelectTrigger extends React.Component {
     showSearch: PropTypes.bool,
     dropdownClassName: PropTypes.string,
     multiple: PropTypes.bool,
-    inputValue: PropTypes.string,
+    inputValue: PropTypes.object,
     filterOption: PropTypes.any,
     options: PropTypes.any,
     prefixCls: PropTypes.string,
     popupClassName: PropTypes.string,
     children: PropTypes.any,
+    backfill: PropTypes.bool,
   };
 
   componentDidUpdate() {
@@ -100,7 +101,7 @@ export default class SelectTrigger extends React.Component {
   };
 
   render() {
-    const { onPopupFocus, ...props } = this.props;
+    const { onPopupFocus, backfill, ...props } = this.props;
     const {
       multiple,
       visible,
@@ -121,6 +122,7 @@ export default class SelectTrigger extends React.Component {
       multiple,
       inputValue,
       visible,
+      backfill,
     });
     let hideAction;
     if (disabled) {

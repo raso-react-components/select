@@ -47,7 +47,7 @@ describe('Select.multiple', () => {
       { key: '1', label: 'One' },
       { key: '2', label: 'Two' },
     ]);
-    expect(wrapper.state().inputValue).toBe('');
+    expect(wrapper.state().inputValue.value).toBe('');
     expect(wrapper.state().open).toBe(false);
     expect(input.node.focus).toBeCalled();
   });

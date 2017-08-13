@@ -59,6 +59,7 @@ exports[`SelectTrigger renders correctly 1`] = `
     onPopupVisibleChange={[Function]}
     popup={
       <DropdownMenu
+        backfill={undefined}
         defaultActiveFirstOption={undefined}
         dropdownMenuStyle={undefined}
         firstActiveValue={undefined}
